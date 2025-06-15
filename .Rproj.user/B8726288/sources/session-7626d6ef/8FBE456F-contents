@@ -10,6 +10,7 @@ load("data/controlNGA.rdata")
 load("data/intensityNGA.rdata")
 load("data/locationsNGA.rdata")
 load("data/eventsNGA.rdata")
+load("data/regionsNGA.rdata")
 
 meanControlNGA <- apply(controlNGA, 2:3, mean)
 meanIntensityNGA <- apply(intensityNGA, 2:3, mean)
@@ -21,7 +22,3 @@ battleEvents <- eventsNGA %>% filter(type == "Battle")
 govconEvents <- eventsNGA %>% filter(type == "Government Conventional")
 govindEvents <- eventsNGA %>% filter(type == "Government Indiscriminate")
 govselEvents <- eventsNGA %>% filter(type == "Government Selective")
-
-
-
-

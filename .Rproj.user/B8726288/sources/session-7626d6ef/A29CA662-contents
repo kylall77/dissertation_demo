@@ -1,0 +1,62 @@
+library(dplyr) # Used for %>%
+library(sf) # Used for read_sf()
+library(units) # Used for drop_units()
+
+setwd("C:/Users/Kyle Allen/Documents/FromSourceToMELTT")
+
+nigeria2 <- sf::st_as_sf(read_sf("gadm/nigeria/gadm41_NGA_2.shp"))
+nigeria2_subset <- nigeria2 %>% filter(NAME_1 == "Adamawa" | NAME_1 == "Bauchi" | NAME_1 == "Borno" | NAME_1 == "Gombe" | NAME_1 == "Taraba" | NAME_1 == "Yobe")
+#nigeria2_subset <- nigeria2 %>% filter(NAME_1 == "Borno" | NAME_1 == "Yobe" | NAME_1 == "Gombe" | NAME_1 == "Bauchi")
+# Three second-order administrative divisions bordering Borno, Nigeria.
+cameroon2 <- sf::st_as_sf(read_sf("gadm/cameroon/gadm41_CMR_2.shp"))
+cameroon2_subset <- cameroon2 %>% filter((NAME_1 == "Extrême-Nord") & (NAME_2=="Logone et Chari" | NAME_2=="Mayo Sava" | NAME_2=="Mayo Tsanaga"))
+# One second-order administrative division bordering Borno, Nigeria.
+chad2 <- sf::st_as_sf(read_sf("gadm/chad/gadm41_TCD_2.shp"))
+chad2_subset <- chad2 %>% filter(NAME_2 == "Mamdi")
+# Three third-order administrative divisions bordering Borno, Nigeria; (second-order to be useful).
+niger3 <- sf::st_as_sf(read_sf("gadm/niger/gadm41_NER_3.shp"))
+niger3_subset <- niger3 %>% filter(NAME_1 == "Diffa" & NAME_3 != "ZR N' Guigmi" & NAME_2 != "N'Guigmi" & NAME_3 != "Goudoumaria" & NAME_3 != "Maine Soroa")
+# Filter to only the individual division names.
+nigeria2test <- nigeria2_subset[,7]
+cameroon2test <- cameroon2_subset[,7]
+chad2test <- chad2_subset[,7]
+niger3test <- niger3_subset[,10]; names(niger3test) <- c("NAME_2","geometry")
+# Combine divisions from all countries.
+spatial_units <- rbind(nigeria2test,cameroon2test,chad2test,niger3test)
+# Remove unnecessary constituents from memory.
+rm(nigeria2,nigeria2_subset,cameroon2,cameroon2_subset,chad2,chad2_subset,niger3,niger3_subset,nigeria2test,cameroon2test,chad2test,niger3test)
+# Specify unit centroids and corresponding distance matrix.
+unit_centers <- st_centroid(spatial_units)
+distances <- drop_units(as.matrix(st_distance(unit_centers)/1000))
+nga0 <- sf::st_as_sf(read_sf("gadm/nigeria/gadm41_NGA_0.shp"))
+
+
+# Goal of this section is to get the indices of the 45 Borno/Yobe LGAs within the set of 120 spatial units.
+nigeriaPost <- sf::st_as_sf(read_sf("gadm/nigeria/gadm41_NGA_2.shp"))
+nigeriaPost <- nigeriaPost %>% filter(NAME_1 == "Borno" | NAME_1 == "Yobe")
+nigeriaPost <- nigeriaPost[,7]
+nigeriaPost <- nigeriaPost[-19,]
+
+
+index_vector <- c();
+for (i in 1:44){
+  search_term <- nigeriaPost$NAME_2[i];
+  for (j in 1:120){
+    if(spatial_units$NAME_2[j] == search_term){
+      index_vector[i] <- j;
+    }
+  }
+}
+
+
+lga_vector <- spatial_units %>%
+   filter(NAME_2 %in% c("Yola North","Maiduguri","Yamaltu/Deba","Karim Lamido","Potiskum","Bauchi"))
+lga_indices <- c();
+for (i in 1:6){
+   search_term <- lga_vector$NAME_2[i];
+   for (j in 1:120){
+      if(spatial_units$NAME_2[j] == search_term){
+         lga_indices[i] <- j;
+      }
+   }
+}

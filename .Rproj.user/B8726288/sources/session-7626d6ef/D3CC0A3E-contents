@@ -1,0 +1,179 @@
+library(rstan)
+
+setwd("C:/Users/Kyle Allen/Documents/FromSourceToMELTT")
+
+load("run_14.8_4_nga.Rdata")
+# For some reason... run_14_8_4_nga is the wrong one.
+# Make sure you're using this one with the 14.8, not 14_8.
+source("Case of Boko Haram in Nigeria/spatial.R")
+
+# Map of Estimates.
+ext <- rstan::extract(run)
+samples <- ext$TauCon
+mean <- apply(samples, 2:3, mean)
+lower <- apply(samples, 2:3, quantile, probs=0.25)
+median <- apply(samples, 2:3, median)
+upper <- apply(samples, 2:3, quantile, probs=0.60)
+sd <- apply(samples, 2:3, sd)
+var <- sd^2
+trans <- ((1-sd)-min(sd))^2
+
+
+library(viridis)
+library(extrafont); loadfonts(device="win"); par(family="LM Roman 10");
+library(ggplot2)
+
+
+
+draw_map <- function(plotdata,year){ggplot()+
+   geom_sf(data=plotdata, aes(fill=value, alpha=trans), color=NA)+
+   scale_fill_stepsn(breaks=seq(-1,1,by=0.4), limits=c(-1,1), colors=c(
+      "green","blue", "darkviolet", "red", "gold"
+   ))+
+   scale_alpha_continuous(breaks=seq(0.2,1,by=0.2), limits=c(0,1))+
+   geom_sf(data=nga0, fill=NA, lwd=1.5, aes(color="Nigerian Border"))+
+   scale_color_manual(values=c("Nigerian Border"="black"))+
+   labs(
+      fill="Zone of Control",
+      alpha="Relative Precision",
+      color="",
+   )+
+   geom_text(aes(x=10, y= 14), label=year, size=8, family="LM Roman 10", inherit.aes = FALSE)+
+   coord_sf(xlim=c(8.9,15), ylim=c(6.7,14.3))+
+   theme_void(base_size=20)+
+   theme(
+      text=element_text(size=16, family="LM Roman 10"),
+      legend.direction = "vertical"
+   )
+}
+
+plotdata <- spatial_units %>% mutate(value = mean[1,], trans = trans[1,]); map1 <- draw_map(plotdata,"2010")+theme(legend.position="right")
+leg <- get_legend(map1)
+plotdata <- spatial_units %>% mutate(value = mean[1,], trans = trans[1,]); map1 <- draw_map(plotdata,"2010")+theme(legend.position="none")
+plotdata <- spatial_units %>% mutate(value = mean[2,], trans = trans[2,]); map2 <- draw_map(plotdata,"2011")+theme(legend.position="none")
+plotdata <- spatial_units %>% mutate(value = mean[3,], trans = trans[3,]); map3 <- draw_map(plotdata,"2012")+theme(legend.position="none")
+plotdata <- spatial_units %>% mutate(value = mean[4,], trans = trans[4,]); map4 <- draw_map(plotdata,"2013")+theme(legend.position="none")
+plotdata <- spatial_units %>% mutate(value = mean[5,], trans = trans[5,]); map5 <- draw_map(plotdata,"2014")+theme(legend.position="none")
+plotdata <- spatial_units %>% mutate(value = mean[6,], trans = trans[6,]); map6 <- draw_map(plotdata,"2015")+theme(legend.position="none")
+plotdata <- spatial_units %>% mutate(value = mean[7,], trans = trans[7,]); map7 <- draw_map(plotdata,"2016")+theme(legend.position="none")
+plotdata <- spatial_units %>% mutate(value = mean[8,], trans = trans[8,]); map8 <- draw_map(plotdata,"2017")+theme(legend.position="none")
+plotdata <- spatial_units %>% mutate(value = mean[9,], trans = trans[9,]); map9 <- draw_map(plotdata,"2018")+theme(legend.position="none")
+plotdata <- spatial_units %>% mutate(value = mean[10,], trans = trans[10,]); map10 <- draw_map(plotdata,"2019")+theme(legend.position="none")
+plotdata <- spatial_units %>% mutate(value = mean[11,], trans = trans[11,]); map11 <- draw_map(plotdata,"2020")+theme(legend.position="none")
+
+library(ggpubr)
+ggarrange(map1,map2,map3,map4,map5,map6,map7,map8,map9,map10,map11,leg,
+          ncol=3, nrow=4)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+t <- 1
+
+plotdata <- spatial_units %>% mutate(value = mean[2,], trans = trans[2,])
+draw_map(plotdata,"2009")
+
+t <- 1
+
+ggplot()+
+   geom_sf(data=plotdata, aes(fill=value, alpha=trans), color=NA)+
+   scale_fill_stepsn(breaks=seq(-1,1,by=0.4), limits=c(-1,1), colors=c(
+      "green","blue", "darkviolet", "red", "gold"
+   ))+
+   scale_alpha_continuous(breaks=seq(0.2,1,by=0.2), limits=c(0,1))+
+   geom_sf(data=nga0, fill=NA, lwd=1.5, aes(color="Nigerian Border"))+
+   scale_color_manual(values=c("Nigerian Border"="black"))+
+   labs(
+      fill="Zone of Control",
+      alpha="Relative Precision",
+      color="",
+   )+
+   coord_sf(xlim=c(8.8,15), ylim=c(6.7,14.3))+
+   theme_void()+
+   theme(
+      text=element_text(size=16, family="LM Roman 10")
+   )
+
+t <- t+1
+
+
+
+##### Three maps together.
+plotdata <- spatial_units %>% mutate(value = mean[3,], trans = trans[3,])
+map3 <- ggplot()+
+   geom_sf(data=plotdata, aes(fill=value, alpha=trans), color=NA)+
+   scale_fill_stepsn(breaks=seq(-1,1,by=0.4), limits=c(-1,1), colors=c(
+      "green","blue", "darkviolet", "red", "gold"
+   ))+
+   scale_alpha_continuous(breaks=seq(0.2,1,by=0.2), limits=c(0,1))+
+   geom_sf(data=nga0, fill=NA, lwd=1.5, aes(color="Nigerian Border"))+
+   scale_color_manual(values=c("Nigerian Border"="black"))+
+   labs(
+      fill="Zone of Control",
+      alpha="Relative Precision",
+      color="",
+   )+
+   coord_sf(xlim=c(8.8,15), ylim=c(6.7,14.3))+
+   theme_void()+
+   theme(
+      text=element_text(size=16, family="LM Roman 10")
+   )
+plotdata <- spatial_units %>% mutate(value = mean[4,], trans = trans[4,])
+map4 <- ggplot()+
+   geom_sf(data=plotdata, aes(fill=value, alpha=trans), color=NA)+
+   scale_fill_stepsn(breaks=seq(-1,1,by=0.4), limits=c(-1,1), colors=c(
+      "green","blue", "darkviolet", "red", "gold"
+   ))+
+   scale_alpha_continuous(breaks=seq(0.2,1,by=0.2), limits=c(0,1))+
+   geom_sf(data=nga0, fill=NA, lwd=1.5, aes(color="Nigerian Border"))+
+   scale_color_manual(values=c("Nigerian Border"="black"))+
+   labs(
+      fill="Zone of Control",
+      alpha="Relative Precision",
+      color="",
+   )+
+   coord_sf(xlim=c(8.8,15), ylim=c(6.7,14.3))+
+   theme_void()+
+   theme(
+      text=element_text(size=16, family="LM Roman 10")
+   )
+plotdata <- spatial_units %>% mutate(value = mean[5,], trans = trans[5,])
+map5 <- ggplot()+
+   geom_sf(data=plotdata, aes(fill=value, alpha=trans), color=NA)+
+   scale_fill_stepsn(breaks=seq(-1,1,by=0.4), limits=c(-1,1), colors=c(
+      "green","blue", "darkviolet", "red", "gold"
+   ))+
+   scale_alpha_continuous(breaks=seq(0.2,1,by=0.2), limits=c(0,1))+
+   geom_sf(data=nga0, fill=NA, lwd=1.5, aes(color="Nigerian Border"))+
+   scale_color_manual(values=c("Nigerian Border"="black"))+
+   labs(
+      fill="Zone of Control",
+      alpha="Relative Precision",
+      color="",
+   )+
+   coord_sf(xlim=c(8.8,15), ylim=c(6.7,14.3))+
+   theme_void()+
+   theme(
+      text=element_text(size=16, family="LM Roman 10")
+   )
+
+# library(gridExtra)
+# grid.arrange(map3,map4,map5,ncol=3)
+
+library(ggpubr)
+ggarrange(map3,map4,map5, ncol=3, common.legend=TRUE, legend="right")
+

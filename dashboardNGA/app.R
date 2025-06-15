@@ -31,7 +31,14 @@ ui <- fluidPage(
                      value = 2010,
                      ticks = FALSE,
                      sep = "",
-                     animate=TRUE),
+                     animate = TRUE),
+         sliderInput("quantile",
+                     "Posterior Quantile to Plot",
+                     min = 1,
+                     max = 99,
+                     value = 50,
+                     ticks = TRUE,
+                     animate = TRUE),
          tags$p("Overlay Events"),
          checkboxInput("rebsel", "Rebel Selective Violence", FALSE),
          checkboxInput("rebind", "Rebel Indiscriminate Attacks", FALSE),
@@ -40,6 +47,8 @@ ui <- fluidPage(
          checkboxInput("govcon", "Gov. Conventional Attacks", FALSE),
          checkboxInput("govind", "Gov. Indiscriminate Attacks", FALSE),
          checkboxInput("govsel", "Gov. Selective Violence", FALSE),
+         tags$p("Map Layers"),
+         checkboxInput("regions", "North East Nigerian State Borders", FALSE),
          width=4
       ),
 
@@ -57,6 +66,13 @@ ui <- fluidPage(
 
 # Define server logic required to draw a histogram
 server <- function(input, output, rebselinput) {
+   
+   quantileControlNGA <- reactive({
+      apply(controlNGA, 2:3, quantile, probs = input$quantile/100)
+   })
+   quantileIntensityNGA <- reactive({
+      apply(intensityNGA, 2:3, quantile, probs = input$quantile/100)
+   })
 
    output$mapPlot <- renderPlot({
       
@@ -68,19 +84,24 @@ server <- function(input, output, rebselinput) {
       if(input$govind){govindFilter <- govindEvents %>% filter(year == input$years)}else{govindFilter <- govindEvents %>% filter(year == 0)}
       if(input$govsel){govselFilter <- govselEvents %>% filter(year == input$years)}else{govselFilter <- govselEvents %>% filter(year == 0)}
       
+      if(input$regions==FALSE){regionsFilter <- regionsNGA %>% filter(NAME_1 == "None")}else{regionsFilter <- regionsNGA}
+      
       map_number <- input$years - 2009
-      mapData <- locationsNGA %>% mutate(value = meanControlNGA[map_number,])
+      mapData <- locationsNGA %>% mutate(value = quantileControlNGA()[map_number,])
       
       ggplot()+
          geom_sf(data=mapData, aes(fill=value), color=NA)+
          scale_fill_viridis_c(breaks=seq(-1,1,by=0.4), limits=c(-1,1), option="turbo", name="Government     Estimate     Boko Haram")+
-         geom_sf(data=rebselFilter, alpha=0.4, shape=16, size=2)+
-         geom_sf(data=rebindFilter, alpha=0.4, shape=16, size=2)+
-         geom_sf(data=rebconFilter, alpha=0.4, shape=16, size=2)+
-         geom_sf(data=battleFilter, alpha=0.4, shape=16, size=2)+
-         geom_sf(data=govconFilter, alpha=0.4, shape=16, size=2)+
-         geom_sf(data=govindFilter, alpha=0.4, shape=16, size=2)+
-         geom_sf(data=govselFilter, alpha=0.4, shape=16, size=2)+
+         geom_sf(data=rebselFilter, alpha=0.4, shape=16, size=3)+
+         geom_sf(data=rebindFilter, alpha=0.4, shape=16, size=3)+
+         geom_sf(data=rebconFilter, alpha=0.4, shape=16, size=3)+
+         geom_sf(data=battleFilter, alpha=0.4, shape=16, size=3)+
+         geom_sf(data=govconFilter, alpha=0.4, shape=16, size=3)+
+         geom_sf(data=govindFilter, alpha=0.4, shape=16, size=3)+
+         geom_sf(data=govselFilter, alpha=0.4, shape=16, size=3)+
+         
+         geom_sf(data=regionsFilter, fill = NA, lwd=1, color="black")+
+         
          coord_sf(xlim=c(8.9,15), ylim=c(6.7,14.3))+
          theme_void(base_size=20)+
          theme(
@@ -103,19 +124,24 @@ server <- function(input, output, rebselinput) {
       if(input$govind){govindFilter <- govindEvents %>% filter(year == input$years)}else{govindFilter <- govindEvents %>% filter(year == 0)}
       if(input$govsel){govselFilter <- govselEvents %>% filter(year == input$years)}else{govselFilter <- govselEvents %>% filter(year == 0)}
       
+      if(input$regions==FALSE){regionsFilter <- regionsNGA %>% filter(NAME_1 == "None")}else{regionsFilter <- regionsNGA}
+      
       map_number <- input$years - 2009
-      mapData <- locationsNGA %>% mutate(value = log(meanIntensityNGA[map_number,]+1))
+      mapData <- locationsNGA %>% mutate(value = log(quantileIntensityNGA()[map_number,]+1))
       
       ggplot()+
          geom_sf(data=mapData, aes(fill=value), color=NA)+
          scale_fill_viridis_c(breaks=seq(0,6,by=2), limits=c(0,6), option="turbo", name="Conflict Intensity (Logged)")+
-         geom_sf(data=rebselFilter, alpha=0.4, shape=16, size=2)+
-         geom_sf(data=rebindFilter, alpha=0.4, shape=16, size=2)+
-         geom_sf(data=rebconFilter, alpha=0.4, shape=16, size=2)+
-         geom_sf(data=battleFilter, alpha=0.4, shape=16, size=2)+
-         geom_sf(data=govconFilter, alpha=0.4, shape=16, size=2)+
-         geom_sf(data=govindFilter, alpha=0.4, shape=16, size=2)+
-         geom_sf(data=govselFilter, alpha=0.4, shape=16, size=2)+
+         geom_sf(data=rebselFilter, alpha=0.4, shape=16, size=3)+
+         geom_sf(data=rebindFilter, alpha=0.4, shape=16, size=3)+
+         geom_sf(data=rebconFilter, alpha=0.4, shape=16, size=3)+
+         geom_sf(data=battleFilter, alpha=0.4, shape=16, size=3)+
+         geom_sf(data=govconFilter, alpha=0.4, shape=16, size=3)+
+         geom_sf(data=govindFilter, alpha=0.4, shape=16, size=3)+
+         geom_sf(data=govselFilter, alpha=0.4, shape=16, size=3)+
+         
+         geom_sf(data=regionsFilter, fill = NA, lwd=1, color="black")+
+         
          coord_sf(xlim=c(8.9,15), ylim=c(6.7,14.3))+
          theme_void(base_size=20)+
          theme(
@@ -131,7 +157,7 @@ server <- function(input, output, rebselinput) {
    output$distPlot <- renderPlot({
       
       map_number <- input$years - 2009
-      plotData <- locationsNGA %>% mutate(value = meanControlNGA[map_number,])
+      plotData <- locationsNGA %>% mutate(value = quantileControlNGA()[map_number,])
       
       ggplot()+
          geom_histogram(data=plotData, aes(x=value, fill=after_stat(x)), binwidth=0.05)+
@@ -154,7 +180,7 @@ server <- function(input, output, rebselinput) {
    output$distPlot2 <- renderPlot({
       
       map_number <- input$years - 2009
-      plotData <- locationsNGA %>% mutate(value = log(meanIntensityNGA[map_number,]+1))
+      plotData <- locationsNGA %>% mutate(value = log(quantileIntensityNGA()[map_number,]+1))
       
       ggplot()+
          geom_histogram(data=plotData, aes(x=value, fill=after_stat(x)), binwidth=0.2)+
